@@ -1,9 +1,8 @@
-from dotenv import load_dotenv
 import os
 import fnmatch
 import logging
 import time
-import openai  # Correct import
+import openai  # Import openai instead of OpenAI
 from termcolor import colored
 from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
@@ -14,18 +13,30 @@ from rich.console import Console
 from rich.table import Table
 import difflib
 import re
+from dotenv import load_dotenv  # Import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
-if not api_key:
-    raise ValueError("OPENAI_API_KEY not found in environment variables. Please check your .env file.")
+# Access the API key from the environment variables
+api_key = os.getenv("OPENAI_API_KEY")
 
-# Set the API key for OpenAI
+# Check if the API key was loaded
+if not api_key:
+    raise ValueError("OpenAI API key not found. Please set OPENAI_API_KEY in your .env file.")
+
+# Set the OpenAI API key
 openai.api_key = api_key
 
 MODEL = "o1-mini"
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai.api_key = api_key
+
+# Initialize OpenAI client (if needed)
+# If your code requires an OpenAI client instance, you can create one
+# client = openai.OpenAI(api_key=api_key)
+
+# Rest of your code...
+
 
 CREATE_SYSTEM_PROMPT = """You are an advanced o1 engineer designed to create files and folders based on user instructions. Your primary objective is to generate the content of the files to be created as code blocks. Each code block should specify whether it's a file or folder, along with its path.
 
