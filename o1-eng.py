@@ -2,7 +2,7 @@ import os
 import fnmatch
 import logging
 import time
-import openai  # Import openai instead of OpenAI
+import openai 
 from termcolor import colored
 from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
@@ -28,8 +28,7 @@ if not api_key:
 # Set the OpenAI API key
 openai.api_key = api_key
 
-MODEL = "o1-mini"
-openai.api_key = api_key
+MODEL = "gpt-4o"
 
 # Initialize OpenAI client (if needed)
 # If your code requires an OpenAI client instance, you can create one
@@ -452,10 +451,10 @@ def chat_with_ai(user_message, is_edit_request=False, retry_count=0, added_files
             print(colored("o1 engineer is thinking...", "magenta"))
             logging.info("Sending general query to AI.")
 
-        response = client.chat.completions.create(
+        response = openai.chat.completions.create(
             model=MODEL,
             messages=messages,
-            max_completion_tokens=60000
+            max_completion_tokens=10000
         )
         logging.info("Received response from AI.")
         last_ai_response = response.choices[0].message.content
