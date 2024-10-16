@@ -3,6 +3,7 @@ import fnmatch
 import logging
 import time
 import openai 
+import requests  # Use requests instead of openai
 from termcolor import colored
 from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
@@ -18,24 +19,34 @@ from dotenv import load_dotenv  # Import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Access the API key from the environment variables
-api_key = os.getenv("OPENAI_API_KEY")
+# Access the OpenRouter API key from the environment variables
+api_key = os.getenv("OPENROUTER_API_KEY")
 
 # Check if the API key was loaded
 if not api_key:
-    raise ValueError("OpenAI API key not found. Please set OPENAI_API_KEY in your .env file.")
+    raise ValueError("OpenRouter API key not found. Please set OPENROUTER_API_KEY in your .env file.")
 
-# Set the OpenAI API key
-openai.api_key = api_key
+# Set the OpenRouter API base URL
+API_BASE = "https://openrouter.ai/api/v1/chat/completions"
 
-MODEL = "gpt-4o-mini"
+# Define the model (ensure it matches OpenRouter's available models)
+MODEL = "openai/o1-mini-2024-09-12"
 
-# Initialize OpenAI client (if needed)
-# If your code requires an OpenAI client instance, you can create one
-# client = openai.OpenAI(api_key=api_key)
+# Define your extra headers with placeholder values
+extra_headers = {
+    "HTTP-Referer": "http://localhost",       # Placeholder for local use
+    "X-Title": "LocalCodingAssistant"         # Placeholder app name
+}
+
+# Setup Logging
+logging.basicConfig(
+    filename='o1_engineer.log',
+    filemode='a',
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
 # Rest of your code...
-
 
 CREATE_SYSTEM_PROMPT = """You are an advanced o1 engineer designed to create files and folders based on user instructions. Your primary objective is to generate the content of the files to be created as code blocks. Each code block should specify whether it's a file or folder, along with its path.
 
@@ -451,7 +462,7 @@ def chat_with_ai(user_message, is_edit_request=False, retry_count=0, added_files
             print(colored("o1 engineer is thinking...", "magenta"))
             logging.info("Sending general query to AI.")
 
-        response = openai.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model=MODEL,
             messages=messages,
             max_completion_tokens=10000
