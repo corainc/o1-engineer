@@ -479,7 +479,7 @@ def chat_with_ai(user_message, is_edit_request=False, retry_count=0, added_files
         data = {
             "model": MODEL,
             "messages": messages,
-            "max_tokens": 1000,  # Adjust as needed
+            "max_tokens": 10000,  # Adjust as needed
         }
 
         response = requests.post(
