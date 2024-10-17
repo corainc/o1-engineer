@@ -1,5 +1,5 @@
-<<<<<<< HEAD
+
 # custom install files
-=======
->>>>>>> parent of 77f84b1 (commit)
+
+*.log
 .env

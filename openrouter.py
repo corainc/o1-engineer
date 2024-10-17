@@ -2,7 +2,8 @@ import os
 import fnmatch
 import logging
 import time
-import requests  # Use requests instead of openai
+import requests
+import json
 from termcolor import colored
 from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
@@ -39,7 +40,7 @@ extra_headers = {
 
 # Setup Logging
 logging.basicConfig(
-    filename='o1_engineer.log',
+    filename='openrouter_engineer.log',
     filemode='a',
     format='%(asctime)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -430,6 +431,7 @@ def apply_edit_instructions(edit_instructions, original_files):
 def chat_with_ai(user_message, is_edit_request=False, retry_count=0, added_files=None):
     global last_ai_response, conversation_history
     try:
+        # [The revised code as shown above]
         # Include added file contents and conversation history in the user message
         if added_files:
             file_context = "Added files:\n"
@@ -439,7 +441,10 @@ def chat_with_ai(user_message, is_edit_request=False, retry_count=0, added_files
 
         # Include conversation history
         if not is_edit_request:
-            history = "\n".join([f"User: {msg}" if i % 2 == 0 else f"AI: {msg}" for i, msg in enumerate(conversation_history)])
+            history = "\n".join(
+                [f"User: {msg}" if i % 2 == 0 else f"AI: {msg}"
+                 for i, msg in enumerate(conversation_history)]
+            )
             if history:
                 user_message = f"{history}\nUser: {user_message}"
 
@@ -453,7 +458,7 @@ def chat_with_ai(user_message, is_edit_request=False, retry_count=0, added_files
         messages = [
             {"role": "user", "content": message_content}
         ]
-        
+
         if is_edit_request and retry_count == 0:
             print(colored("Analyzing files and generating modifications...", "magenta"))
             logging.info("Sending edit request to AI.")
@@ -461,25 +466,54 @@ def chat_with_ai(user_message, is_edit_request=False, retry_count=0, added_files
             print(colored("o1 engineer is thinking...", "magenta"))
             logging.info("Sending general query to AI.")
 
-        response = openai.ChatCompletion.create(
-            model=MODEL,
-            messages=messages,
-            max_completion_tokens=10000
+        # Prepare headers
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            # Optional headers can be added here
+            # "HTTP-Referer": "http://localhost",
+            # "X-Title": "LocalCodingAssistant",
+        }
+
+        # Prepare data
+        data = {
+            "model": MODEL,
+            "messages": messages,
+            "max_tokens": 1000,  # Adjust as needed
+        }
+
+        response = requests.post(
+            url=API_BASE,
+            headers=headers,
+            json=data
         )
+
+        if response.status_code != 200:
+            print(colored(f"Error: {response.status_code} {response.reason}", "red"))
+            logging.error(f"Error from OpenRouter API: {response.status_code} {response.reason} {response.text}")
+            return None
+
+        response_data = response.json()
         logging.info("Received response from AI.")
-        last_ai_response = response.choices[0].message.content
+
+        if 'choices' in response_data and len(response_data['choices']) > 0:
+            last_ai_response = response_data['choices'][0]['message']['content']
+        else:
+            print(colored("Error: No response from AI.", "red"))
+            logging.error("No response from AI.")
+            return None
 
         if not is_edit_request:
             # Update conversation history
             conversation_history.append(user_message)
             conversation_history.append(last_ai_response)
-            if len(conversation_history) > 20:  # 10 interactions (user + AI each)
+            if len(conversation_history) > 20:  # Keep last 10 interactions
                 conversation_history = conversation_history[-20:]
 
         return last_ai_response
     except Exception as e:
-        print(colored(f"Error while communicating with OpenAI: {e}", "red"))
-        logging.error(f"Error while communicating with OpenAI: {e}")
+        print(colored(f"Error while communicating with OpenRouter API: {e}", "red"))
+        logging.error(f"Error while communicating with OpenRouter API: {e}")
         return None
     
 
