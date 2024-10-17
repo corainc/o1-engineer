@@ -2,7 +2,6 @@ import os
 import fnmatch
 import logging
 import time
-import openai 
 import requests  # Use requests instead of openai
 from termcolor import colored
 from prompt_toolkit import prompt
