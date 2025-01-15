@@ -1,6 +1,9 @@
 # Environment variables
 .env
 
+#Storage
+Field-Properties/
+
 # Python
 __pycache__/
 *.py[cod]
